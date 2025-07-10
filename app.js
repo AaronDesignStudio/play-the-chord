@@ -4,6 +4,7 @@ class App {
         this.piano = new Piano('piano');
         this.game = new ChordGame(this.piano);
         this.allChords = window.ChordData.generateAllChords();
+        this.pitchDetector = new PitchDetector();
         
         // Selection state
         this.selectedRootNotes = new Set();
@@ -11,6 +12,7 @@ class App {
         
         this.initializeUI();
         this.bindEvents();
+        this.initPitchDetector();
     }
     
     initializeUI() {
@@ -196,6 +198,9 @@ class App {
         
         // Initialize with all selected
         allNotesCheckbox.click();
+        
+        // Setup external piano listener
+        this.setupExternalPianoListener();
     }
     
     setupDropdownToggle(dropdownId) {
@@ -278,6 +283,38 @@ class App {
         });
         
         return selectedChords;
+    }
+    
+    // Initialize pitch detector
+    async initPitchDetector() {
+        await this.pitchDetector.init();
+        
+        // Set up note detection callback
+        this.pitchDetector.onNoteDetected((note) => {
+            if (this.pitchDetector.isListening) {
+                this.game.handleExternalNote(note);
+            }
+        });
+    }
+    
+    // Setup external piano listener
+    setupExternalPianoListener() {
+        const checkbox = document.getElementById('listenToPiano');
+        
+        checkbox.addEventListener('change', async (e) => {
+            if (e.target.checked) {
+                const success = await this.pitchDetector.startListening();
+                if (success) {
+                    this.game.setExternalPianoMode(true);
+                } else {
+                    e.target.checked = false;
+                    alert('Unable to access microphone. Please check your permissions.');
+                }
+            } else {
+                this.pitchDetector.stopListening();
+                this.game.setExternalPianoMode(false);
+            }
+        });
     }
 }
 

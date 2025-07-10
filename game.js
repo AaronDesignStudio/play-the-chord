@@ -12,11 +12,22 @@ class ChordGame {
         this.exerciseStarted = false;
         this.correctNotes = new Set();
         this.currentOctave = 4;
+        this.externalPianoMode = false;
         
         // UI elements
         this.chordNameEl = document.getElementById('chordName');
         this.feedbackEl = document.getElementById('feedback');
         this.flashcardEl = document.getElementById('flashcard');
+    }
+    
+    // Set external piano mode
+    setExternalPianoMode(enabled) {
+        this.externalPianoMode = enabled;
+        if (enabled) {
+            this.piano.setEnabled(false);
+        } else {
+            this.piano.setEnabled(true);
+        }
     }
     
     // Start game with selected chords
@@ -66,7 +77,7 @@ class ChordGame {
         this.piano.glowKey(firstNote, this.currentOctave);
     }
     
-    // Handle key click
+    // Handle key click (from UI piano)
     handleKeyClick(note, octave) {
         // Resume audio context on first interaction
         window.audioSystem.resume();
@@ -91,6 +102,37 @@ class ChordGame {
         } else {
             // Don't play note sound for incorrect notes, only error sound
             this.handleIncorrectNote(note, octave);
+        }
+    }
+    
+    // Handle external piano note detection
+    handleExternalNote(note) {
+        if (!this.currentChord) return;
+        
+        // For external piano, we don't know the octave, so we check any octave
+        if (!this.exerciseStarted) {
+            if (note === this.currentChord.notes[0]) {
+                this.startExercise(4); // Default to octave 4
+                // Visual feedback for external piano
+                this.piano.glowKey(note, 4);
+                setTimeout(() => {
+                    this.piano.markCorrect(note, 4);
+                }, 100);
+            }
+            return;
+        }
+        
+        // Check if note is in chord
+        const isCorrect = this.currentChord.notes.includes(note);
+        
+        if (isCorrect && !this.correctNotes.has(note)) {
+            this.handleCorrectNote(note, 4);
+            // Visual feedback
+            this.piano.markCorrect(note, 4);
+        } else if (!isCorrect) {
+            this.handleIncorrectNote(note, 4);
+            // Visual feedback
+            this.piano.markIncorrect(note, 4);
         }
     }
     
