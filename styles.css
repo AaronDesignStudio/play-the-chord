@@ -1,0 +1,541 @@
+/* Global Styles */
+:root {
+    --bg-dark: #0F0F0F;
+    --container-dark: #232D3F;
+    --primary-accent: #005B41;
+    --active-color: #008170;
+    --text-light: #e0e0e0;
+    --text-medium: #b0b0b0;
+    --white: #ffffff;
+    --piano-white: #f5f5f5;
+    --piano-white-hover: #e0e0e0;
+    --piano-black: #1a1a1a;
+    --piano-black-hover: #333;
+    --border-color: #333;
+    --error-color: #d32f2f;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-deep: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--container-dark);
+    border-radius: 12px;
+    box-shadow: var(--shadow-deep);
+}
+
+.app-header h1 {
+    font-size: 2rem;
+    color: var(--text-light);
+    font-weight: 300;
+}
+
+.settings-btn {
+    padding: 10px 20px;
+    background: var(--primary-accent);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.settings-btn:hover {
+    background: var(--active-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+/* Game Area */
+.game-area {
+    background: var(--container-dark);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: var(--shadow-deep);
+}
+
+/* Flashcard */
+.flashcard {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 40px;
+    background: var(--primary-accent);
+    border-radius: 12px;
+    box-shadow: var(--shadow-deep);
+    transition: all 0.3s ease;
+}
+
+.flashcard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+.chord-name {
+    font-size: 2.5rem;
+    color: var(--white);
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+/* Piano */
+.piano-container {
+    margin-bottom: 30px;
+    overflow-x: auto;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.piano {
+    position: relative;
+    margin: 0 auto;
+    height: 200px;
+    background: transparent;
+    padding: 0;
+}
+
+/* Piano Keys */
+.key {
+    cursor: pointer;
+    transition: all 0.1s ease;
+    position: absolute;
+    top: 0;
+}
+
+.key.white {
+    width: 40px;
+    height: 180px;
+    background: var(--piano-white);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 5px 5px;
+    z-index: 1;
+}
+
+.key.white:hover {
+    background: var(--piano-white-hover);
+}
+
+.key.white:active {
+    background: var(--piano-white-hover);
+    transform: translateY(2px);
+    box-shadow: var(--shadow);
+}
+
+.key.black {
+    width: 25px;
+    height: 120px;
+    background: var(--piano-black);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 3px 3px;
+    z-index: 2;
+}
+
+.key.black:hover {
+    background: var(--piano-black-hover);
+}
+
+.key.black:active {
+    background: var(--piano-black-hover);
+    transform: translateY(2px);
+}
+
+/* Key States */
+.key.correct {
+    background: var(--active-color) !important;
+    transform: translateY(2px);
+    box-shadow: var(--shadow);
+}
+
+.key.incorrect {
+    background: var(--error-color) !important;
+    animation: shake 0.5s ease;
+}
+
+.key.glowing {
+    animation: glow 1s ease-in-out infinite;
+}
+
+.key.hint {
+    animation: blink 0.5s ease-in-out infinite;
+}
+
+/* Key Label */
+.key-label {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--text-medium);
+    pointer-events: none;
+    font-weight: 500;
+}
+
+.key.black .key-label {
+    color: var(--text-light);
+    bottom: 8px;
+    font-size: 10px;
+}
+
+/* Animations */
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--active-color);
+        background: var(--active-color);
+    }
+    50% {
+        box-shadow: 0 0 30px var(--active-color);
+        background: var(--primary-accent);
+    }
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(100%) rotateY(90deg);
+        opacity: 0;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%) rotateY(-90deg);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) rotateY(0);
+        opacity: 1;
+    }
+}
+
+/* Feedback */
+.feedback {
+    text-align: center;
+    font-size: 1.5rem;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+}
+
+.feedback.perfect {
+    color: var(--active-color);
+    animation: celebrate 0.5s ease;
+}
+
+.feedback.success {
+    color: var(--text-light);
+}
+
+@keyframes celebrate {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--container-dark);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-deep);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    color: var(--text-light);
+    font-weight: 300;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-medium);
+    line-height: 1;
+    transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+    color: var(--text-light);
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+/* Settings */
+.settings-section {
+    margin-bottom: 30px;
+}
+
+.settings-section h3 {
+    margin-bottom: 15px;
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+.root-notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.root-notes .checkbox-wrapper {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.root-notes .checkbox-wrapper:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.chord-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.chord-group {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.chord-group-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.chord-group-header input {
+    margin-right: 10px;
+}
+
+.chord-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-left: 25px;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-wrapper input {
+    margin-right: 8px;
+}
+
+.checkbox-wrapper label {
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-light);
+}
+
+/* Buttons */
+.btn-primary {
+    padding: 12px 30px;
+    background: var(--primary-accent);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--active-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+.btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+    color: var(--text-medium);
+}
+
+/* Custom Checkbox Styles */
+input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--text-medium);
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+input[type="checkbox"]:checked {
+    background: var(--active-color);
+    border-color: var(--active-color);
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+input[type="checkbox"]:hover {
+    border-color: var(--text-light);
+}
+
+input[type="checkbox"]:indeterminate {
+    background: var(--primary-accent);
+    border-color: var(--primary-accent);
+}
+
+input[type="checkbox"]:indeterminate::after {
+    content: '−';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .app-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .chord-name {
+        font-size: 2rem;
+    }
+    
+    .key.white {
+        width: 35px;
+        height: 140px;
+    }
+    
+    .key.black {
+        width: 20px;
+        height: 100px;
+    }
+    
+    .piano-container {
+        padding: 10px;
+    }
+    
+    .root-notes {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    }
+    
+    .chord-types {
+        grid-template-columns: 1fr;
+    }
+}
