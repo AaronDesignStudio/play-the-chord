@@ -4,15 +4,16 @@ class AudioSystem {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.audioContext.createGain();
         this.masterGain.connect(this.audioContext.destination);
-        this.masterGain.gain.value = 0.3;
+        this.masterGain.gain.value = 0.2;
         
-        // Piano sound parameters
-        this.envelope = {
-            attack: 0.01,
-            decay: 0.3,
-            sustain: 0.4,
-            release: 0.5
-        };
+        // Create a compressor to control dynamics
+        this.compressor = this.audioContext.createDynamicsCompressor();
+        this.compressor.threshold.value = -24;
+        this.compressor.knee.value = 30;
+        this.compressor.ratio.value = 12;
+        this.compressor.attack.value = 0.003;
+        this.compressor.release.value = 0.25;
+        this.compressor.connect(this.masterGain);
     }
     
     // Convert note name to frequency
@@ -31,47 +32,39 @@ class AudioSystem {
         const frequency = this.noteToFrequency(note, octave);
         const now = this.audioContext.currentTime;
         
-        // Create oscillators for richer sound
-        const oscillators = [];
-        const gains = [];
+        // Create oscillator
+        const oscillator = this.audioContext.createOscillator();
+        oscillator.type = 'triangle'; // Cleaner sound than sine for piano
+        oscillator.frequency.setValueAtTime(frequency, now);
         
-        // Fundamental frequency
-        oscillators.push(this.createOscillator(frequency, 'sine'));
-        gains.push(this.createGain(0.6));
+        // Create gain envelope
+        const gainNode = this.audioContext.createGain();
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.3, now + 0.01); // Quick attack
+        gainNode.gain.exponentialRampToValueAtTime(0.1, now + 0.1); // Quick decay
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration); // Release
         
-        // First harmonic
-        oscillators.push(this.createOscillator(frequency * 2, 'sine'));
-        gains.push(this.createGain(0.3));
+        // Add a filter for more piano-like sound
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(frequency * 4, now); // Cut high harmonics
+        filter.Q.setValueAtTime(1, now);
         
-        // Second harmonic
-        oscillators.push(this.createOscillator(frequency * 3, 'sine'));
-        gains.push(this.createGain(0.1));
+        // Connect the audio graph
+        oscillator.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.compressor);
         
-        // Connect oscillators
-        oscillators.forEach((osc, i) => {
-            osc.connect(gains[i]);
-            gains[i].connect(this.masterGain);
-        });
+        // Start and stop
+        oscillator.start(now);
+        oscillator.stop(now + duration + 0.1);
         
-        // Apply envelope
-        gains.forEach(gain => {
-            gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(1, now + this.envelope.attack);
-            gain.gain.exponentialRampToValueAtTime(
-                this.envelope.sustain,
-                now + this.envelope.attack + this.envelope.decay
-            );
-            gain.gain.exponentialRampToValueAtTime(
-                0.01,
-                now + duration + this.envelope.release
-            );
-        });
-        
-        // Start and stop oscillators
-        oscillators.forEach(osc => {
-            osc.start(now);
-            osc.stop(now + duration + this.envelope.release);
-        });
+        // Clean up
+        oscillator.onended = () => {
+            oscillator.disconnect();
+            filter.disconnect();
+            gainNode.disconnect();
+        };
     }
     
     // Play a chord
@@ -90,14 +83,16 @@ class AudioSystem {
         const osc = this.audioContext.createOscillator();
         const gain = this.audioContext.createGain();
         
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        
+        osc.type = 'sine';
         osc.frequency.setValueAtTime(523.25, now); // C5
         osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
         
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        
+        osc.connect(gain);
+        gain.connect(this.compressor);
         
         osc.start(now);
         osc.stop(now + 0.2);
@@ -109,54 +104,45 @@ class AudioSystem {
         const osc = this.audioContext.createOscillator();
         const gain = this.audioContext.createGain();
         
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        
+        osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(200, now);
         osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
         
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        
+        osc.connect(gain);
+        gain.connect(this.compressor);
         
         osc.start(now);
-        osc.stop(now + 0.2);
+        osc.stop(now + 0.15);
     }
     
     // Play perfect success sound
     playPerfectSuccess() {
-        const now = this.audioContext.currentTime;
         const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
         
         notes.forEach((freq, index) => {
             setTimeout(() => {
+                const now = this.audioContext.currentTime;
                 const osc = this.audioContext.createOscillator();
                 const gain = this.audioContext.createGain();
                 
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                
+                osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, now);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.15, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(this.compressor);
                 
                 osc.start(now);
                 osc.stop(now + 0.3);
             }, index * 100);
         });
-    }
-    
-    // Helper methods
-    createOscillator(frequency, type = 'sine') {
-        const osc = this.audioContext.createOscillator();
-        osc.type = type;
-        osc.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-        return osc;
-    }
-    
-    createGain(value = 1) {
-        const gain = this.audioContext.createGain();
-        gain.gain.setValueAtTime(value, this.audioContext.currentTime);
-        return gain;
     }
     
     // Resume audio context (needed for some browsers)

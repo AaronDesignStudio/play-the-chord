@@ -71,12 +71,11 @@ class ChordGame {
         // Resume audio context on first interaction
         window.audioSystem.resume();
         
-        // Play note sound
-        window.audioSystem.playNote(note, octave);
-        
         if (!this.exerciseStarted) {
             // Check if clicked key is the first note
             if (note === this.currentChord.notes[0]) {
+                // Play note sound for first note
+                window.audioSystem.playNote(note, octave);
                 this.startExercise(octave);
             }
             return;
@@ -86,8 +85,11 @@ class ChordGame {
         const noteInChord = this.isNoteInChord(note, octave);
         
         if (noteInChord) {
+            // Play note sound only for correct notes
+            window.audioSystem.playNote(note, octave);
             this.handleCorrectNote(note, octave);
         } else {
+            // Don't play note sound for incorrect notes, only error sound
             this.handleIncorrectNote(note, octave);
         }
     }

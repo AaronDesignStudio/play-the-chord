@@ -4,189 +4,187 @@ class App {
         this.piano = new Piano('piano');
         this.game = new ChordGame(this.piano);
         this.allChords = window.ChordData.generateAllChords();
+        
+        // Selection state
         this.selectedRootNotes = new Set();
-        this.selectedChordTypes = new Map();
+        this.selectedChordTypes = new Set();
         
         this.initializeUI();
         this.bindEvents();
     }
     
     initializeUI() {
-        this.createRootNoteSelectors();
-        this.createChordGroupSelectors();
+        this.createRootNoteDropdown();
+        this.createChordTypeDropdown();
         this.updateStartButton();
     }
     
-    createRootNoteSelectors() {
-        const container = document.getElementById('rootNotes');
-        container.innerHTML = '';
+    createRootNoteDropdown() {
+        const menu = document.getElementById('rootNoteMenu');
         
         window.ChordData.NOTES.forEach(note => {
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('checkbox-wrapper');
+            const label = document.createElement('label');
+            label.classList.add('dropdown-checkbox');
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.id = `root-${note}`;
             checkbox.value = note;
             
-            const label = document.createElement('label');
-            label.htmlFor = `root-${note}`;
-            label.textContent = note;
+            const span = document.createElement('span');
+            span.textContent = note;
             
-            wrapper.appendChild(checkbox);
-            wrapper.appendChild(label);
-            container.appendChild(wrapper);
-            
-            // Event listener
-            checkbox.addEventListener('change', () => {
-                if (checkbox.checked) {
-                    this.selectedRootNotes.add(note);
-                } else {
-                    this.selectedRootNotes.delete(note);
-                }
-                this.updateStartButton();
-            });
+            label.appendChild(checkbox);
+            label.appendChild(span);
+            menu.appendChild(label);
         });
     }
     
-    createChordGroupSelectors() {
-        const container = document.getElementById('chordGroups');
-        container.innerHTML = '';
+    createChordTypeDropdown() {
+        const menu = document.getElementById('chordTypeMenu');
         
         Object.entries(window.ChordData.CHORD_GROUPS).forEach(([groupName, chordTypes]) => {
-            const groupDiv = document.createElement('div');
-            groupDiv.classList.add('chord-group');
+            // Create group section
+            const groupSection = document.createElement('div');
+            groupSection.classList.add('chord-group-section');
             
-            // Group header
-            const header = document.createElement('div');
-            header.classList.add('chord-group-header');
+            // Create group header with checkbox
+            const groupHeader = document.createElement('div');
+            groupHeader.classList.add('chord-group-header');
+            
+            const groupLabel = document.createElement('label');
+            groupLabel.classList.add('dropdown-checkbox');
             
             const groupCheckbox = document.createElement('input');
             groupCheckbox.type = 'checkbox';
-            groupCheckbox.id = `group-${groupName}`;
+            groupCheckbox.value = groupName;
+            groupCheckbox.dataset.groupName = groupName;
             
-            const groupLabel = document.createElement('label');
-            groupLabel.htmlFor = `group-${groupName}`;
-            groupLabel.textContent = groupName;
+            const groupSpan = document.createElement('span');
+            groupSpan.textContent = groupName;
             
-            header.appendChild(groupCheckbox);
-            header.appendChild(groupLabel);
-            groupDiv.appendChild(header);
+            groupLabel.appendChild(groupCheckbox);
+            groupLabel.appendChild(groupSpan);
+            groupHeader.appendChild(groupLabel);
+            groupSection.appendChild(groupHeader);
             
-            // Chord types
-            const typesDiv = document.createElement('div');
-            typesDiv.classList.add('chord-types');
+            // Create chord types grid
+            const typesGrid = document.createElement('div');
+            typesGrid.classList.add('chord-types-grid');
             
             chordTypes.forEach(chordType => {
-                const typeWrapper = document.createElement('div');
-                typeWrapper.classList.add('checkbox-wrapper');
+                const typeLabel = document.createElement('label');
+                typeLabel.classList.add('dropdown-checkbox');
                 
                 const typeCheckbox = document.createElement('input');
                 typeCheckbox.type = 'checkbox';
-                typeCheckbox.id = `type-${groupName}-${chordType}`;
                 typeCheckbox.value = chordType;
                 typeCheckbox.dataset.group = groupName;
                 
-                const typeLabel = document.createElement('label');
-                typeLabel.htmlFor = `type-${groupName}-${chordType}`;
-                typeLabel.textContent = chordType;
+                const typeSpan = document.createElement('span');
+                typeSpan.textContent = chordType;
                 
-                typeWrapper.appendChild(typeCheckbox);
-                typeWrapper.appendChild(typeLabel);
-                typesDiv.appendChild(typeWrapper);
-                
-                // Event listener for individual chord type
-                typeCheckbox.addEventListener('change', () => {
-                    this.updateChordSelection(groupName, chordType, typeCheckbox.checked);
-                    this.updateGroupCheckbox(groupName);
-                    this.updateStartButton();
-                });
+                typeLabel.appendChild(typeCheckbox);
+                typeLabel.appendChild(typeSpan);
+                typesGrid.appendChild(typeLabel);
             });
             
-            groupDiv.appendChild(typesDiv);
-            container.appendChild(groupDiv);
-            
-            // Event listener for group checkbox
-            groupCheckbox.addEventListener('change', () => {
-                const checkboxes = typesDiv.querySelectorAll('input[type="checkbox"]');
-                checkboxes.forEach(cb => {
-                    cb.checked = groupCheckbox.checked;
-                    const chordType = cb.value;
-                    this.updateChordSelection(groupName, chordType, cb.checked);
-                });
-                this.updateStartButton();
-            });
+            groupSection.appendChild(typesGrid);
+            menu.appendChild(groupSection);
         });
-    }
-    
-    updateChordSelection(groupName, chordType, selected) {
-        if (!this.selectedChordTypes.has(groupName)) {
-            this.selectedChordTypes.set(groupName, new Set());
-        }
-        
-        const groupSet = this.selectedChordTypes.get(groupName);
-        if (selected) {
-            groupSet.add(chordType);
-        } else {
-            groupSet.delete(chordType);
-        }
-        
-        if (groupSet.size === 0) {
-            this.selectedChordTypes.delete(groupName);
-        }
-    }
-    
-    updateGroupCheckbox(groupName) {
-        const groupCheckbox = document.getElementById(`group-${groupName}`);
-        const groupChordTypes = window.ChordData.CHORD_GROUPS[groupName];
-        const selectedTypes = this.selectedChordTypes.get(groupName) || new Set();
-        
-        if (selectedTypes.size === 0) {
-            groupCheckbox.checked = false;
-            groupCheckbox.indeterminate = false;
-        } else if (selectedTypes.size === groupChordTypes.length) {
-            groupCheckbox.checked = true;
-            groupCheckbox.indeterminate = false;
-        } else {
-            groupCheckbox.checked = false;
-            groupCheckbox.indeterminate = true;
-        }
-    }
-    
-    updateStartButton() {
-        const startButton = document.getElementById('startGame');
-        const hasRootNotes = this.selectedRootNotes.size > 0;
-        const hasChordTypes = this.selectedChordTypes.size > 0;
-        
-        startButton.disabled = !hasRootNotes || !hasChordTypes;
     }
     
     bindEvents() {
-        // Settings modal
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsModal = document.getElementById('settingsModal');
-        const closeSettings = document.getElementById('closeSettings');
-        const startGame = document.getElementById('startGame');
+        // Setup dropdown toggles
+        this.setupDropdownToggle('rootNoteDropdown');
+        this.setupDropdownToggle('chordTypeDropdown');
         
-        settingsBtn.addEventListener('click', () => {
-            settingsModal.classList.add('active');
-        });
+        // Root notes selection
+        const rootNoteMenu = document.getElementById('rootNoteMenu');
+        const allNotesCheckbox = rootNoteMenu.querySelector('input[value="all"]');
         
-        closeSettings.addEventListener('click', () => {
-            settingsModal.classList.remove('active');
-        });
-        
-        settingsModal.addEventListener('click', (e) => {
-            if (e.target === settingsModal) {
-                settingsModal.classList.remove('active');
+        rootNoteMenu.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                if (e.target.value === 'all') {
+                    // Handle "All Notes" checkbox
+                    const noteCheckboxes = rootNoteMenu.querySelectorAll('input[type="checkbox"]:not([value="all"])');
+                    noteCheckboxes.forEach(cb => {
+                        cb.checked = e.target.checked;
+                        if (e.target.checked) {
+                            this.selectedRootNotes.add(cb.value);
+                        } else {
+                            this.selectedRootNotes.delete(cb.value);
+                        }
+                    });
+                } else {
+                    // Handle individual note checkbox
+                    if (e.target.checked) {
+                        this.selectedRootNotes.add(e.target.value);
+                    } else {
+                        this.selectedRootNotes.delete(e.target.value);
+                    }
+                    
+                    // Update "All Notes" checkbox state
+                    const noteCheckboxes = rootNoteMenu.querySelectorAll('input[type="checkbox"]:not([value="all"])');
+                    const allChecked = Array.from(noteCheckboxes).every(cb => cb.checked);
+                    const someChecked = Array.from(noteCheckboxes).some(cb => cb.checked);
+                    
+                    allNotesCheckbox.checked = allChecked;
+                    allNotesCheckbox.indeterminate = !allChecked && someChecked;
+                }
+                
+                this.updateRootNoteDisplay();
+                this.updateStartButton();
             }
         });
         
-        startGame.addEventListener('click', () => {
+        // Chord types selection
+        const chordTypeMenu = document.getElementById('chordTypeMenu');
+        
+        chordTypeMenu.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                const groupName = e.target.dataset.groupName;
+                const chordType = e.target.value;
+                
+                if (groupName) {
+                    // Group checkbox clicked
+                    const groupCheckboxes = chordTypeMenu.querySelectorAll(`input[data-group="${groupName}"]`);
+                    groupCheckboxes.forEach(cb => {
+                        cb.checked = e.target.checked;
+                        if (e.target.checked) {
+                            this.selectedChordTypes.add(cb.value);
+                        } else {
+                            this.selectedChordTypes.delete(cb.value);
+                        }
+                    });
+                } else {
+                    // Individual chord type checkbox
+                    if (e.target.checked) {
+                        this.selectedChordTypes.add(chordType);
+                    } else {
+                        this.selectedChordTypes.delete(chordType);
+                    }
+                    
+                    // Update group checkbox state
+                    const group = e.target.dataset.group;
+                    const groupCheckbox = chordTypeMenu.querySelector(`input[data-group-name="${group}"]`);
+                    const groupCheckboxes = chordTypeMenu.querySelectorAll(`input[data-group="${group}"]`);
+                    const allChecked = Array.from(groupCheckboxes).every(cb => cb.checked);
+                    const someChecked = Array.from(groupCheckboxes).some(cb => cb.checked);
+                    
+                    groupCheckbox.checked = allChecked;
+                    groupCheckbox.indeterminate = !allChecked && someChecked;
+                }
+                
+                this.updateChordTypeDisplay();
+                this.updateStartButton();
+            }
+        });
+        
+        // Start button
+        const startBtn = document.getElementById('startBtn');
+        startBtn.addEventListener('click', () => {
             const selectedChords = this.getSelectedChords();
             if (selectedChords.length > 0) {
-                settingsModal.classList.remove('active');
                 this.game.startGame(selectedChords);
             }
         });
@@ -196,25 +194,86 @@ class App {
             this.game.handleKeyClick(note, octave);
         });
         
-        // Show settings on first load
-        settingsModal.classList.add('active');
+        // Initialize with all selected
+        allNotesCheckbox.click();
+    }
+    
+    setupDropdownToggle(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        const trigger = dropdown.querySelector('.dropdown-trigger');
+        
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasActive = dropdown.classList.contains('active');
+            
+            // Close all dropdowns
+            document.querySelectorAll('.custom-dropdown').forEach(d => {
+                d.classList.remove('active');
+            });
+            
+            // Toggle this dropdown
+            if (!wasActive) {
+                dropdown.classList.add('active');
+            }
+        });
+        
+        // Prevent dropdown from closing when clicking inside
+        dropdown.querySelector('.dropdown-menu').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            dropdown.classList.remove('active');
+        });
+    }
+    
+    updateRootNoteDisplay() {
+        const valueEl = document.getElementById('rootNoteValue');
+        if (this.selectedRootNotes.size === 0) {
+            valueEl.textContent = 'None';
+        } else if (this.selectedRootNotes.size === window.ChordData.NOTES.length) {
+            valueEl.textContent = 'All';
+        } else if (this.selectedRootNotes.size === 1) {
+            valueEl.textContent = Array.from(this.selectedRootNotes)[0];
+        } else {
+            valueEl.textContent = `${this.selectedRootNotes.size} selected`;
+        }
+    }
+    
+    updateChordTypeDisplay() {
+        const valueEl = document.getElementById('chordTypeValue');
+        const totalChordTypes = Object.values(window.ChordData.CHORD_GROUPS)
+            .reduce((sum, types) => sum + types.length, 0);
+        
+        if (this.selectedChordTypes.size === 0) {
+            valueEl.textContent = 'None';
+        } else if (this.selectedChordTypes.size === totalChordTypes) {
+            valueEl.textContent = 'All';
+        } else if (this.selectedChordTypes.size === 1) {
+            valueEl.textContent = Array.from(this.selectedChordTypes)[0];
+        } else {
+            valueEl.textContent = `${this.selectedChordTypes.size} selected`;
+        }
+    }
+    
+    updateStartButton() {
+        const startBtn = document.getElementById('startBtn');
+        const hasSelection = this.selectedRootNotes.size > 0 && this.selectedChordTypes.size > 0;
+        startBtn.disabled = !hasSelection;
     }
     
     getSelectedChords() {
         const selectedChords = [];
         
         this.selectedRootNotes.forEach(root => {
-            this.selectedChordTypes.forEach((chordTypes, groupName) => {
-                chordTypes.forEach(chordType => {
-                    const chord = this.allChords.find(c => 
-                        c.root === root && 
-                        c.group === groupName && 
-                        c.subgroup === chordType
-                    );
-                    if (chord) {
-                        selectedChords.push(chord);
-                    }
-                });
+            this.selectedChordTypes.forEach(chordType => {
+                const chord = this.allChords.find(c => 
+                    c.root === root && c.subgroup === chordType
+                );
+                if (chord) {
+                    selectedChords.push(chord);
+                }
             });
         });
         
